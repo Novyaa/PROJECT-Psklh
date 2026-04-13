@@ -12,7 +12,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// dashboard default (boleh dipakai / tidak)
+// dashboard default 
 Route::get('/dashboard', function () {
     return redirect('/siswa/dashboard');
 })->middleware(['auth'])->name('dashboard');

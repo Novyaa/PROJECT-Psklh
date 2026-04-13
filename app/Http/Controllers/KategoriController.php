@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Auth;
 
 class KategoriController extends Controller
 {
-    // LIST DATA
     public function index()
     {
         if (Auth::user()->role !== 'admin') {
@@ -19,13 +18,12 @@ class KategoriController extends Controller
         return view('kategori.index', compact('kategoris'));
     }
 
-    // FORM TAMBAH
     public function create()
     {
         return view('kategori.create');
     }
 
-    // SIMPAN
+
     public function store(Request $request)
     {
         $request->validate([
@@ -39,14 +37,12 @@ class KategoriController extends Controller
         return redirect('/kategori')->with('success', 'Kategori berhasil ditambah');
     }
 
-    // FORM EDIT
     public function edit($id)
     {
         $kategori = Kategori::findOrFail($id);
         return view('kategori.edit', compact('kategori'));
     }
 
-    // UPDATE
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -62,7 +58,6 @@ class KategoriController extends Controller
         return redirect('/kategori')->with('success', 'Kategori berhasil diupdate');
     }
 
-    // DELETE
     public function destroy($id)
     {
         $kategori = Kategori::findOrFail($id);

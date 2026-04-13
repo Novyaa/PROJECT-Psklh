@@ -6,18 +6,17 @@ use App\Models\Pengaduan;
 use App\Models\Kategori;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 
 class PengaduanController extends Controller
 {
-    // TAMPILKAN FORM (SISWA)
     public function create()
     {
         $kategoris = Kategori::all();
         return view('pengaduan.create', compact('kategoris'));
     }
 
-    // SIMPAN PENGADUAN
    public function store(Request $request)
 {
     $request->validate([
@@ -48,7 +47,6 @@ if ($request->hasFile('foto')) {
     return back()->with('success', 'Pengaduan berhasil dikirim');
 }
 
-    // LIST PENGADUAN (ADMIN)
     public function index()
     {
         if (Auth::user()->role !== 'admin') {
@@ -59,7 +57,6 @@ if ($request->hasFile('foto')) {
         return view('admin.dashboard', compact('pengaduans'));
     }
 
-    // DETAIL
     public function show($id)
     {
         $pengaduan = Pengaduan::with('user', 'kategori')->findOrFail($id);
@@ -70,9 +67,7 @@ if ($request->hasFile('foto')) {
     {
         $pengaduan = Pengaduan::findOrFail($id);
 
-        // =========================
         // JIKA ADMIN
-        // =========================
         if (Auth::user()->role === 'admin') {
 
             $fotoProgress = $pengaduan->foto_progress;
@@ -89,11 +84,14 @@ if ($request->hasFile('foto')) {
 
             return back()->with('success', 'Pengaduan berhasil diupdate');
         }
-        // =========================
+
         // JIKA SISWA
-        // =========================
         if ($pengaduan->user_id !== Auth::id()) {
             abort(403);
+        }
+
+        if (! $pengaduan->canBeEditedBySiswa()) {
+            abort(403, 'Pengaduan bisa di edit saat status masih menunggu.');
         }
 
 
@@ -101,12 +99,25 @@ if ($request->hasFile('foto')) {
             'judul' => 'required',
             'lokasi' => 'required',
             'keterangan' => 'required',
+            'foto' => 'nullable|image',
         ]);
+
+        $fotoPath = $pengaduan->foto;
+
+        if ($request->hasFile('foto')) {
+            if ($pengaduan->foto && Storage::disk('public')->exists($pengaduan->foto)) {
+                Storage::disk('public')->delete($pengaduan->foto);
+            }
+
+            $fotoPath = $request->file('foto')->store('pengaduan', 'public');
+        }
 
         $pengaduan->update([
             'judul' => $request->judul,
             'lokasi' => $request->lokasi,
             'keterangan' => $request->keterangan,
+            'kategori_id' => $request->kategori_id,
+            'foto' => $fotoPath,
         ]);
 
         return redirect('/siswa/dashboard')->with('success', 'Pengaduan berhasil diupdate');
@@ -120,6 +131,10 @@ if ($request->hasFile('foto')) {
             abort(403);
         }
 
+        if (! $pengaduan->canBeEditedBySiswa()) {
+            abort(403, 'Pengaduan bisa di edit saat status masih menunggu.');
+        }
+
         $kategoris = Kategori::all();
 
         return view('pengaduan.edit', compact('pengaduan', 'kategoris'));
@@ -129,8 +144,7 @@ if ($request->hasFile('foto')) {
     {
         $pengaduan = Pengaduan::findOrFail($id);
 
-        if ($pengaduan->user_id !== Auth::id()) {
-            abort(403);
+        if (Auth::user()->role !== 'admin' && $pengaduan->user_id !== Auth::id()) {
         }
 
         $pengaduan->delete();

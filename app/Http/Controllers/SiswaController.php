@@ -16,7 +16,8 @@ class SiswaController extends Controller
 
     public function create()
     {
-        return view('admin.siswa.create');
+        $siswas = User::where('role', 'siswa')->latest()->get();
+        return view('admin.siswa.create', compact('siswas'));
     }
 
     public function store(Request $request)

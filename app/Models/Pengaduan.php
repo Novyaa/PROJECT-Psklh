@@ -9,7 +9,6 @@ class Pengaduan extends Model
 {
     use HasFactory;
 
-    // MASS ASSIGNMENT
     protected $fillable = [
         'user_id',
         'kategori_id',
@@ -22,19 +21,16 @@ class Pengaduan extends Model
         'foto_progress',
     ];
 
-    // RELASI KE USER
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    // RELASI KE KATEGORI
     public function kategori()
     {
         return $this->belongsTo(Kategori::class);
     }
 
-    // HELPER STATUS (OPSIONAL TAPI BAGUS)
     public function isPending()
     {
         return $this->status === 'menunggu';
@@ -48,5 +44,10 @@ class Pengaduan extends Model
     public function isSelesai()
     {
         return $this->status === 'selesai';
+    }
+
+    public function canBeEditedBySiswa()
+    {
+        return $this->isPending();
     }
 }
